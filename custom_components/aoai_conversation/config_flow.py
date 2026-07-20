@@ -314,30 +314,56 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 }
             )
 
+        # The chat model is the Azure *deployment name* and is required per
+        # install, so it is always shown (not hidden behind advanced options).
+        step_schema[
+            vol.Optional(
+                CONF_CHAT_MODEL,
+                description={
+                    "suggested_value": options.get(
+                        CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL
+                    )
+                },
+            )
+        ] = str
+
         step_schema[
             vol.Required(CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False))
         ] = bool
 
         if user_input is not None:
+            errors: dict[str, str] = {}
             if not user_input.get(CONF_LLM_HASS_API):
                 user_input.pop(CONF_LLM_HASS_API, None)
 
-            if user_input[CONF_RECOMMENDED]:
-                if self._is_new:
-                    return self.async_create_entry(
-                        title=user_input.pop(CONF_NAME),
+            if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
+                errors[CONF_CHAT_MODEL] = "model_not_supported"
+
+            if not errors:
+                if user_input[CONF_RECOMMENDED]:
+                    if self._is_new:
+                        return self.async_create_entry(
+                            title=user_input.pop(CONF_NAME),
+                            data=user_input,
+                        )
+                    return self.async_update_and_abort(
+                        self._get_entry(),
+                        self._get_reconfigure_subentry(),
                         data=user_input,
                     )
-                return self.async_update_and_abort(
-                    self._get_entry(),
-                    self._get_reconfigure_subentry(),
-                    data=user_input,
-                )
 
-            options.update(user_input)
-            if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
-                options.pop(CONF_LLM_HASS_API)
-            return await self.async_step_additional()
+                options.update(user_input)
+                if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
+                    options.pop(CONF_LLM_HASS_API)
+                return await self.async_step_additional()
+
+            return self.async_show_form(
+                step_id="init",
+                data_schema=self.add_suggested_values_to_schema(
+                    vol.Schema(step_schema), options
+                ),
+                errors=errors,
+            )
 
         return self.async_show_form(
             step_id="init",
@@ -354,10 +380,6 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         step_schema: VolDictType = {
-            vol.Optional(
-                CONF_CHAT_MODEL,
-                default=RECOMMENDED_CHAT_MODEL,
-            ): str,
             vol.Optional(
                 CONF_MAX_TOKENS,
                 default=RECOMMENDED_MAX_TOKENS,
@@ -378,9 +400,6 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             options.update(user_input)
-            if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
-                errors[CONF_CHAT_MODEL] = "model_not_supported"
-
             if not errors:
                 return await self.async_step_model()
 

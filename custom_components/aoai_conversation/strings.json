@@ -1,29 +1,29 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "Service is already configured",
+      "reauth_successful": "Re-authentication was successful"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "Unexpected error"
     },
     "step": {
       "reauth_confirm": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "endpoint": "[%key:component::aoai_conversation::config::step::user::data::endpoint%]"
+          "api_key": "API key",
+          "endpoint": "Endpoint"
         },
         "data_description": {
-          "api_key": "[%key:component::aoai_conversation::config::step::user::data_description::api_key%]",
-          "endpoint": "[%key:component::aoai_conversation::config::step::user::data_description::endpoint%]"
+          "api_key": "Your Azure OpenAI (Azure AI Foundry) API key.",
+          "endpoint": "Your Azure OpenAI resource endpoint, e.g. `https://your-resource.services.ai.azure.com/`."
         },
         "description": "Reauthentication required. Please enter your updated API key and endpoint."
       },
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_key": "API key",
           "endpoint": "Endpoint"
         },
         "data_description": {
@@ -37,14 +37,14 @@
   "config_subentries": {
     "ai_task_data": {
       "abort": {
-        "entry_not_loaded": "[%key:component::aoai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "reconfigure_successful": "Reconfiguration was successful"
       },
       "entry_type": "AI task",
       "error": {
-        "code_interpreter_minimal_reasoning": "[%key:component::aoai_conversation::config_subentries::conversation::error::code_interpreter_minimal_reasoning%]",
-        "model_not_supported": "[%key:component::aoai_conversation::config_subentries::conversation::error::model_not_supported%]",
-        "web_search_minimal_reasoning": "[%key:component::aoai_conversation::config_subentries::conversation::error::web_search_minimal_reasoning%]"
+        "code_interpreter_minimal_reasoning": "Code interpreter is not supported with minimal reasoning effort",
+        "model_not_supported": "This model is not supported, please select a different model",
+        "web_search_minimal_reasoning": "Web search is currently not supported with minimal reasoning effort"
       },
       "initiate_flow": {
         "reconfigure": "Reconfigure AI task",
@@ -53,56 +53,60 @@
       "step": {
         "additional": {
           "data": {
-            "chat_model": "[%key:common::generic::model%]",
-            "max_tokens": "[%key:component::aoai_conversation::config_subentries::conversation::step::additional::data::max_tokens%]",
-            "store_responses": "[%key:component::aoai_conversation::config_subentries::conversation::step::additional::data::store_responses%]",
-            "temperature": "[%key:component::aoai_conversation::config_subentries::conversation::step::additional::data::temperature%]",
-            "top_p": "[%key:component::aoai_conversation::config_subentries::conversation::step::additional::data::top_p%]"
+            "chat_model": "Model",
+            "max_tokens": "Maximum tokens to return in response",
+            "store_responses": "Store requests and responses in OpenAI",
+            "temperature": "Temperature",
+            "top_p": "Top P"
           },
           "data_description": {
-            "store_responses": "[%key:component::aoai_conversation::config_subentries::conversation::step::additional::data_description::store_responses%]"
+            "store_responses": "If enabled, requests and responses are stored by OpenAI and visible in your OpenAI dashboard logs"
           },
-          "title": "[%key:component::aoai_conversation::config_subentries::conversation::step::additional::title%]"
+          "title": "Additional settings"
         },
         "init": {
           "data": {
-            "name": "[%key:common::config_flow::data::name%]",
-            "recommended": "[%key:component::aoai_conversation::config_subentries::conversation::step::init::data::recommended%]"
+            "name": "Name",
+            "chat_model": "Model (Azure deployment name)",
+            "recommended": "Recommended model settings"
+          },
+          "data_description": {
+            "chat_model": "The name of your Azure OpenAI chat model *deployment* (not the base model name), e.g. `gpt-4o-mini` or your custom deployment name."
           }
         },
         "model": {
           "data": {
-            "code_interpreter": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::code_interpreter%]",
-            "image_model": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::image_model%]",
-            "inline_citations": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::inline_citations%]",
-            "pro_mode": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::pro_mode%]",
-            "reasoning_effort": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::reasoning_effort%]",
-            "reasoning_summary": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::reasoning_summary%]",
-            "search_context_size": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::search_context_size%]",
-            "service_tier": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::service_tier%]",
-            "user_location": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::user_location%]",
-            "web_search": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data::web_search%]"
+            "code_interpreter": "Enable code interpreter tool",
+            "image_model": "Image generation model",
+            "inline_citations": "Include links in web search results",
+            "pro_mode": "Pro mode",
+            "reasoning_effort": "Reasoning effort",
+            "reasoning_summary": "Reasoning summary",
+            "search_context_size": "Search context size",
+            "service_tier": "Service tier",
+            "user_location": "Include home location",
+            "web_search": "Enable web search"
           },
           "data_description": {
-            "code_interpreter": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::code_interpreter%]",
-            "image_model": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::image_model%]",
-            "inline_citations": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::inline_citations%]",
-            "pro_mode": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::pro_mode%]",
-            "reasoning_effort": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::reasoning_effort%]",
-            "reasoning_summary": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::reasoning_summary%]",
-            "search_context_size": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::search_context_size%]",
-            "service_tier": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::service_tier%]",
-            "user_location": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::user_location%]",
-            "web_search": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::data_description::web_search%]"
+            "code_interpreter": "This tool, also known as the python tool to the model, allows it to run code to answer questions",
+            "image_model": "The model to use when generating images",
+            "inline_citations": "If disabled, additional prompt is added to ask the model to not include source citations",
+            "pro_mode": "Perform more model work to improve reliability on difficult tasks and return a single final answer",
+            "reasoning_effort": "How many reasoning tokens the model should generate before creating a response to the prompt",
+            "reasoning_summary": "Controls the length and detail of reasoning summaries provided by the model",
+            "search_context_size": "High level guidance for the amount of context window space to use for the search",
+            "service_tier": "Controls the cost and response time",
+            "user_location": "Refine search results based on geography",
+            "web_search": "Allow the model to search the web for the latest information before generating a response"
           },
-          "title": "[%key:component::aoai_conversation::config_subentries::conversation::step::model::title%]"
+          "title": "Model-specific options"
         }
       }
     },
     "conversation": {
       "abort": {
         "entry_not_loaded": "Cannot add things while the configuration is disabled.",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "reconfigure_successful": "Reconfiguration was successful"
       },
       "entry_type": "Conversation agent",
       "error": {
@@ -117,7 +121,7 @@
       "step": {
         "additional": {
           "data": {
-            "chat_model": "[%key:common::generic::model%]",
+            "chat_model": "Model",
             "max_tokens": "Maximum tokens to return in response",
             "store_responses": "Store requests and responses in OpenAI",
             "temperature": "Temperature",
@@ -130,13 +134,15 @@
         },
         "init": {
           "data": {
-            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
-            "name": "[%key:common::config_flow::data::name%]",
-            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "llm_hass_api": "Control Home Assistant",
+            "name": "Name",
+            "chat_model": "Model (Azure deployment name)",
+            "prompt": "Instructions",
             "recommended": "Recommended model settings"
           },
           "data_description": {
-            "prompt": "Instruct how the LLM should respond. This can be a template."
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "chat_model": "The name of your Azure OpenAI chat model *deployment* (not the base model name), e.g. `gpt-4o-mini` or your custom deployment name."
           }
         },
         "model": {
@@ -170,8 +176,8 @@
     },
     "stt": {
       "abort": {
-        "entry_not_loaded": "[%key:component::aoai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "reconfigure_successful": "Reconfiguration was successful"
       },
       "entry_type": "Speech-to-text",
       "initiate_flow": {
@@ -181,7 +187,7 @@
       "step": {
         "init": {
           "data": {
-            "name": "[%key:common::config_flow::data::name%]",
+            "name": "Name",
             "stt_endpoint": "Endpoint URI",
             "stt_api_key": "API key",
             "stt_language": "Language"
@@ -196,8 +202,8 @@
     },
     "tts": {
       "abort": {
-        "entry_not_loaded": "[%key:component::aoai_conversation::config_subentries::conversation::abort::entry_not_loaded%]",
-        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "reconfigure_successful": "Reconfiguration was successful"
       },
       "entry_type": "Text-to-speech",
       "initiate_flow": {
@@ -207,7 +213,7 @@
       "step": {
         "init": {
           "data": {
-            "name": "[%key:common::config_flow::data::name%]",
+            "name": "Name",
             "tts_endpoint": "Endpoint URI",
             "tts_api_key": "API key",
             "tts_voice": "Voice",
@@ -249,10 +255,10 @@
   "selector": {
     "reasoning_effort": {
       "options": {
-        "high": "[%key:common::state::high%]",
-        "low": "[%key:common::state::low%]",
+        "high": "High",
+        "low": "Low",
         "max": "Max",
-        "medium": "[%key:common::state::medium%]",
+        "medium": "Medium",
         "minimal": "Minimal",
         "none": "None",
         "xhigh": "X-High"
@@ -260,22 +266,22 @@
     },
     "reasoning_summary": {
       "options": {
-        "auto": "[%key:common::state::auto%]",
+        "auto": "Auto",
         "concise": "Concise",
         "detailed": "Detailed",
-        "off": "[%key:common::state::off%]"
+        "off": "Off"
       }
     },
     "search_context_size": {
       "options": {
-        "high": "[%key:common::state::high%]",
-        "low": "[%key:common::state::low%]",
-        "medium": "[%key:common::state::medium%]"
+        "high": "High",
+        "low": "Low",
+        "medium": "Medium"
       }
     },
     "service_tier": {
       "options": {
-        "auto": "[%key:common::state::auto%]",
+        "auto": "Auto",
         "default": "Standard",
         "flex": "Flex",
         "priority": "Priority"
@@ -283,9 +289,9 @@
     },
     "verbosity": {
       "options": {
-        "high": "[%key:common::state::high%]",
-        "low": "[%key:common::state::low%]",
-        "medium": "[%key:common::state::medium%]"
+        "high": "High",
+        "low": "Low",
+        "medium": "Medium"
       }
     }
   },

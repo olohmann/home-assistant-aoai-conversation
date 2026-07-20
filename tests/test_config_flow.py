@@ -138,14 +138,18 @@ async def test_ai_task_subentry_accepts_custom_image_deployment(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    # init step: name + advanced (recommended=False) to reach the model step.
+    # init step: name + chat model (deployment) + advanced (recommended=False).
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {"name": "Azure Image Task", "recommended": False},
+        {
+            "name": "Azure Image Task",
+            "chat_model": "gpt-4o-mini",
+            "recommended": False,
+        },
     )
     assert result["step_id"] == "additional"
 
-    # additional step: accept defaults (gpt-4o-mini chat model).
+    # additional step: accept defaults.
     result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
     assert result["step_id"] == "model"
 
@@ -155,3 +159,26 @@ async def test_ai_task_subentry_accepts_custom_image_deployment(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["image_model"] == custom_deployment
+    assert result["data"]["chat_model"] == "gpt-4o-mini"
+
+
+async def test_conversation_subentry_sets_model_in_recommended_mode(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """The chat model (deployment) is settable without entering advanced mode."""
+    result = await hass.config_entries.subentries.async_init(
+        (setup_integration.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Azure Conversation",
+            "chat_model": "my-gpt4o-deployment",
+            "recommended": True,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["chat_model"] == "my-gpt4o-deployment"
