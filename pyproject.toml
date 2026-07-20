@@ -8,8 +8,9 @@ license = { text = "Apache-2.0" }
 authors = [{ name = "olohmann" }]
 
 # Runtime dependency of the integration itself (mirrors manifest.json requirements).
-# Pinned to match the Home Assistant release this integration targets.
-dependencies = ["openai==2.45.0"]
+# Pinned to match the Home Assistant release this integration targets
+# (HA releases through 2026.7.x pin openai==2.21.0).
+dependencies = ["openai==2.21.0"]
 
 [dependency-groups]
 dev = [
