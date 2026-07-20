@@ -16,7 +16,6 @@ from homeassistant.util.json import json_loads
 from .const import (
     CONF_CHAT_MODEL,
     CONF_IMAGE_MODEL,
-    RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_IMAGE_MODEL,
     UNSUPPORTED_IMAGE_MODELS,
 )
@@ -59,7 +58,7 @@ class OpenAITaskEntity(
             ai_task.AITaskEntityFeature.GENERATE_DATA
             | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
         )
-        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        model = self.subentry.data.get(CONF_CHAT_MODEL, "")
         if not model.startswith(tuple(UNSUPPORTED_IMAGE_MODELS)):
             self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 

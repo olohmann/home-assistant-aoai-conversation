@@ -91,7 +91,6 @@ from .const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
     LOGGER,
-    RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_PRO_MODE,
@@ -489,7 +488,7 @@ class OpenAIBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Azure OpenAI",
-            model=subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=subentry.data.get(CONF_CHAT_MODEL, ""),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
@@ -507,7 +506,7 @@ class OpenAIBaseLLMEntity(Entity):
         messages = _convert_content_to_param(chat_log.content)
 
         model_args = ResponseCreateParamsStreaming(
-            model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            model=options[CONF_CHAT_MODEL],
             input=messages,
             max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
             user=chat_log.conversation_id,

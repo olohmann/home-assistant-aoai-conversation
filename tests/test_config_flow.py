@@ -143,7 +143,7 @@ async def test_ai_task_subentry_accepts_custom_image_deployment(
         result["flow_id"],
         {
             "name": "Azure Image Task",
-            "chat_model": "gpt-4o-mini",
+            "chat_model": "gpt-4.1-mini",
             "recommended": False,
         },
     )
@@ -159,7 +159,7 @@ async def test_ai_task_subentry_accepts_custom_image_deployment(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["image_model"] == custom_deployment
-    assert result["data"]["chat_model"] == "gpt-4o-mini"
+    assert result["data"]["chat_model"] == "gpt-4.1-mini"
 
 
 async def test_conversation_subentry_sets_model_in_recommended_mode(

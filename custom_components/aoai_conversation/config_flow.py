@@ -85,7 +85,6 @@ from .const import (
     DEFAULT_TTS_VOICE,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
-    RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CODE_INTERPRETER,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_IMAGE_MODEL,
@@ -314,16 +313,13 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 }
             )
 
-        # The chat model is the Azure *deployment name* and is required per
-        # install, so it is always shown (not hidden behind advanced options).
+        # The chat model is the Azure *deployment name*: required per install,
+        # with no default (deployment names vary and there is no sensible
+        # universal default). Always shown, not hidden behind advanced options.
         step_schema[
-            vol.Optional(
+            vol.Required(
                 CONF_CHAT_MODEL,
-                description={
-                    "suggested_value": options.get(
-                        CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL
-                    )
-                },
+                description={"suggested_value": options.get(CONF_CHAT_MODEL)},
             )
         ] = str
 
@@ -697,7 +693,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 }
             )
             response = await client.responses.create(
-                model=RECOMMENDED_CHAT_MODEL,
+                model=self.options[CONF_CHAT_MODEL],
                 input=[
                     {
                         "role": "system",
