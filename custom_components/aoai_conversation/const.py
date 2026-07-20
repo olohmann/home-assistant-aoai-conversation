@@ -11,8 +11,8 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 
 DEFAULT_CONVERSATION_NAME = "Azure OpenAI Conversation"
 DEFAULT_AI_TASK_NAME = "Azure OpenAI AI Task"
-DEFAULT_STT_NAME = "Azure OpenAI STT"
-DEFAULT_TTS_NAME = "Azure OpenAI TTS"
+DEFAULT_STT_NAME = "Azure Speech STT"
+DEFAULT_TTS_NAME = "Azure Speech TTS"
 DEFAULT_NAME = "Azure OpenAI Conversation"
 
 # Azure-specific connection settings.
@@ -33,8 +33,21 @@ CONF_STORE_RESPONSES = "store_responses"
 CONF_SERVICE_TIER = "service_tier"
 CONF_TEMPERATURE = "temperature"
 CONF_TOP_P = "top_p"
-CONF_TTS_SPEED = "tts_speed"
 CONF_VERBOSITY = "verbosity"
+
+# Azure AI Speech (STT / TTS) connection + options. STT and TTS are hard-wired to
+# Azure Speech; each entity carries its own endpoint URI and API key because the
+# Speech endpoint differs per install (custom subdomain or regional host).
+CONF_STT_ENDPOINT = "stt_endpoint"
+CONF_STT_API_KEY = "stt_api_key"
+CONF_STT_LANGUAGE = "stt_language"
+CONF_TTS_ENDPOINT = "tts_endpoint"
+CONF_TTS_API_KEY = "tts_api_key"
+CONF_TTS_VOICE = "tts_voice"
+CONF_TTS_OUTPUT_FORMAT = "tts_output_format"
+CONF_TTS_RATE = "tts_rate"
+CONF_TTS_PITCH = "tts_pitch"
+CONF_TTS_STYLE = "tts_style"
 CONF_WEB_SEARCH = "web_search"
 CONF_WEB_SEARCH_USER_LOCATION = "user_location"
 CONF_WEB_SEARCH_CONTEXT_SIZE = "search_context_size"
@@ -52,18 +65,31 @@ RECOMMENDED_REASONING_EFFORT = "low"
 RECOMMENDED_STORE_RESPONSES = False
 RECOMMENDED_REASONING_SUMMARY = "auto"
 RECOMMENDED_SERVICE_TIER = "auto"
-RECOMMENDED_STT_MODEL = "gpt-4o-mini-transcribe"
 RECOMMENDED_TEMPERATURE = 1.0
 RECOMMENDED_TOP_P = 1.0
-RECOMMENDED_TTS_SPEED = 1.0
 RECOMMENDED_VERBOSITY = "medium"
+
+# Azure AI Speech defaults.
+DEFAULT_STT_LANGUAGE = "en-US"
+DEFAULT_TTS_VOICE = "de-DE-KatjaNeural"
+DEFAULT_TTS_OUTPUT_FORMAT = "audio-24khz-48kbitrate-mono-mp3"
+# X-Microsoft-OutputFormat -> (file extension, HA-facing content type).
+TTS_OUTPUT_FORMATS: dict[str, tuple[str, str]] = {
+    "audio-16khz-32kbitrate-mono-mp3": ("mp3", "audio/mpeg"),
+    "audio-24khz-48kbitrate-mono-mp3": ("mp3", "audio/mpeg"),
+    "audio-24khz-96kbitrate-mono-mp3": ("mp3", "audio/mpeg"),
+    "audio-48khz-96kbitrate-mono-mp3": ("mp3", "audio/mpeg"),
+    "audio-48khz-192kbitrate-mono-mp3": ("mp3", "audio/mpeg"),
+    "ogg-24khz-16bit-mono-opus": ("ogg", "audio/ogg"),
+    "ogg-48khz-16bit-mono-opus": ("ogg", "audio/ogg"),
+    "riff-16khz-16bit-mono-pcm": ("wav", "audio/wav"),
+    "riff-24khz-16bit-mono-pcm": ("wav", "audio/wav"),
+    "riff-48khz-16bit-mono-pcm": ("wav", "audio/wav"),
+}
 RECOMMENDED_WEB_SEARCH = False
 RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE = "medium"
 RECOMMENDED_WEB_SEARCH_USER_LOCATION = False
 RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS = False
-DEFAULT_STT_PROMPT = (
-    "The following conversation is a smart home user talking to Home Assistant."
-)
 
 UNSUPPORTED_MODELS: list[str] = [
     "o1-mini",
@@ -123,10 +149,12 @@ RECOMMENDED_CONVERSATION_OPTIONS = {
 RECOMMENDED_AI_TASK_OPTIONS = {
     CONF_RECOMMENDED: True,
 }
-RECOMMENDED_STT_OPTIONS: dict[str, Any] = {}
-RECOMMENDED_TTS_OPTIONS = {
-    CONF_PROMPT: "",
-    CONF_CHAT_MODEL: "gpt-4o-mini-tts",
+RECOMMENDED_STT_OPTIONS: dict[str, Any] = {
+    CONF_STT_LANGUAGE: DEFAULT_STT_LANGUAGE,
+}
+RECOMMENDED_TTS_OPTIONS: dict[str, Any] = {
+    CONF_TTS_VOICE: DEFAULT_TTS_VOICE,
+    CONF_TTS_OUTPUT_FORMAT: DEFAULT_TTS_OUTPUT_FORMAT,
 }
 
 UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS: list[str] = [

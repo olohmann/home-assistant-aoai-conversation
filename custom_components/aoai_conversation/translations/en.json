@@ -181,13 +181,15 @@
       "step": {
         "init": {
           "data": {
-            "chat_model": "Model",
             "name": "[%key:common::config_flow::data::name%]",
-            "prompt": "[%key:common::config_flow::data::prompt%]"
+            "stt_endpoint": "Endpoint URI",
+            "stt_api_key": "API key",
+            "stt_language": "Language"
           },
           "data_description": {
-            "chat_model": "The model to use to transcribe speech.",
-            "prompt": "Use this prompt to improve the quality of the transcripts. Translate to the pipeline language for best results. See the documentation for more details."
+            "stt_endpoint": "Your Azure AI Speech endpoint, e.g. `https://your-resource.cognitiveservices.azure.com/`.",
+            "stt_api_key": "The API key for the Azure AI Speech resource.",
+            "stt_language": "BCP-47 language used for recognition, e.g. `de-DE` or `en-US`."
           }
         }
       }
@@ -206,12 +208,22 @@
         "init": {
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
-            "prompt": "[%key:common::config_flow::data::prompt%]",
-            "tts_speed": "Speed"
+            "tts_endpoint": "Endpoint URI",
+            "tts_api_key": "API key",
+            "tts_voice": "Voice",
+            "tts_output_format": "Output format",
+            "tts_rate": "Rate",
+            "tts_pitch": "Pitch",
+            "tts_style": "Speaking style"
           },
           "data_description": {
-            "prompt": "Control aspects of speech, including accent, emotional range, intonation, impressions, speed of speech, tone, whispering, and more",
-            "tts_speed": "Speed of the generated speech"
+            "tts_endpoint": "Your Azure AI Speech endpoint, e.g. `https://your-resource.cognitiveservices.azure.com/`.",
+            "tts_api_key": "The API key for the Azure AI Speech resource.",
+            "tts_voice": "Neural voice short name, e.g. `de-DE-KatjaNeural`. See the Azure voice list.",
+            "tts_output_format": "Audio output format returned by Azure Speech.",
+            "tts_rate": "Optional SSML prosody rate, e.g. `+10%`, `slow`, `1.2`.",
+            "tts_pitch": "Optional SSML prosody pitch, e.g. `+2st`, `high`, `-5%`.",
+            "tts_style": "Optional speaking style for voices that support it, e.g. `cheerful`."
           }
         }
       }

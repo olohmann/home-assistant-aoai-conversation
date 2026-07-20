@@ -55,9 +55,18 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_SERVICE_TIER,
     CONF_STORE_RESPONSES,
+    CONF_STT_API_KEY,
+    CONF_STT_ENDPOINT,
+    CONF_STT_LANGUAGE,
     CONF_TEMPERATURE,
     CONF_TOP_P,
-    CONF_TTS_SPEED,
+    CONF_TTS_API_KEY,
+    CONF_TTS_ENDPOINT,
+    CONF_TTS_OUTPUT_FORMAT,
+    CONF_TTS_PITCH,
+    CONF_TTS_RATE,
+    CONF_TTS_STYLE,
+    CONF_TTS_VOICE,
     CONF_VERBOSITY,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
@@ -69,9 +78,11 @@ from .const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_STT_LANGUAGE,
     DEFAULT_STT_NAME,
-    DEFAULT_STT_PROMPT,
     DEFAULT_TTS_NAME,
+    DEFAULT_TTS_OUTPUT_FORMAT,
+    DEFAULT_TTS_VOICE,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
@@ -84,17 +95,16 @@ from .const import (
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_SERVICE_TIER,
     RECOMMENDED_STORE_RESPONSES,
-    RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_OPTIONS,
-    RECOMMENDED_TTS_SPEED,
     RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+    TTS_OUTPUT_FORMATS,
     UNSUPPORTED_CODE_INTERPRETER_MODELS,
     UNSUPPORTED_FLEX_SERVICE_TIERS_MODELS,
     UNSUPPORTED_IMAGE_MODELS,
@@ -703,7 +713,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
 
 class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
-    """Flow for managing OpenAI STT subentries."""
+    """Flow for managing Azure Speech STT subentries."""
 
     options: dict[str, Any]
 
@@ -729,8 +739,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage initial options."""
-        # abort if entry is not loaded
+        """Manage STT options."""
         if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
@@ -744,27 +753,13 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
 
         step_schema.update(
             {
-                vol.Optional(
-                    CONF_PROMPT,
-                    description={
-                        "suggested_value": options.get(CONF_PROMPT, DEFAULT_STT_PROMPT)
-                    },
-                ): TextSelector(
-                    TextSelectorConfig(multiline=True, type=TextSelectorType.TEXT)
+                vol.Required(CONF_STT_ENDPOINT): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
                 ),
-                vol.Optional(
-                    CONF_CHAT_MODEL, default=RECOMMENDED_STT_MODEL
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            "gpt-4o-transcribe",
-                            "gpt-4o-mini-transcribe",
-                            "whisper-1",
-                        ],
-                        mode=SelectSelectorMode.DROPDOWN,
-                        custom_value=True,
-                    )
+                vol.Required(CONF_STT_API_KEY): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
+                vol.Optional(CONF_STT_LANGUAGE, default=DEFAULT_STT_LANGUAGE): str,
             }
         )
 
@@ -792,7 +787,7 @@ class OpenAISubentrySTTFlowHandler(ConfigSubentryFlow):
 
 
 class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
-    """Flow for managing OpenAI TTS subentries."""
+    """Flow for managing Azure Speech TTS subentries."""
 
     options: dict[str, Any]
 
@@ -818,8 +813,7 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage initial options."""
-        # abort if entry is not loaded
+        """Manage TTS options."""
         if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
@@ -833,12 +827,24 @@ class OpenAISubentryTTSFlowHandler(ConfigSubentryFlow):
 
         step_schema.update(
             {
-                vol.Optional(CONF_PROMPT): TextSelector(
-                    TextSelectorConfig(multiline=True, type=TextSelectorType.TEXT)
+                vol.Required(CONF_TTS_ENDPOINT): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
                 ),
+                vol.Required(CONF_TTS_API_KEY): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
+                vol.Optional(CONF_TTS_VOICE, default=DEFAULT_TTS_VOICE): TextSelector(),
                 vol.Optional(
-                    CONF_TTS_SPEED, default=RECOMMENDED_TTS_SPEED
-                ): NumberSelector(NumberSelectorConfig(min=0.25, max=4.0, step=0.01)),
+                    CONF_TTS_OUTPUT_FORMAT, default=DEFAULT_TTS_OUTPUT_FORMAT
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=list(TTS_OUTPUT_FORMATS),
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Optional(CONF_TTS_RATE): str,
+                vol.Optional(CONF_TTS_PITCH): str,
+                vol.Optional(CONF_TTS_STYLE): str,
             }
         )
 
