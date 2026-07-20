@@ -12,19 +12,23 @@ run = "uv sync"
 
 [tasks.lint]
 description = "Run ruff lint checks"
-run = "uv run ruff check custom_components tests"
+run = "uv run ruff check custom_components tests scripts"
 
 [tasks.format]
 description = "Format code with ruff"
-run = "uv run ruff format custom_components tests"
+run = "uv run ruff format custom_components tests scripts"
 
 [tasks.format-check]
 description = "Check formatting with ruff"
-run = "uv run ruff format --check custom_components tests"
+run = "uv run ruff format --check custom_components tests scripts"
 
 [tasks.test]
 description = "Run the pytest suite"
 run = "uv run pytest"
+
+[tasks.smoketest]
+description = "Run the live Azure smoketest (reads .env)"
+run = "uv run python scripts/smoketest.py"
 
 [tasks.check]
 description = "Run lint, format-check and tests"

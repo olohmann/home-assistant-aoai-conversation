@@ -21,6 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
     CONF_TTS_API_KEY,
@@ -144,7 +145,9 @@ class AzureSpeechTTSEntity(TextToSpeechEntity, Entity):
             return None
 
         try:
-            raw = await async_list_voices(self.hass, endpoint, api_key)
+            raw = await async_list_voices(
+                get_async_client(self.hass), endpoint, api_key
+            )
         except HomeAssistantError as err:
             _LOGGER.debug("Could not list Azure Speech voices: %s", err)
             return None
@@ -212,6 +215,6 @@ class AzureSpeechTTSEntity(TextToSpeechEntity, Entity):
         )
 
         audio = await async_synthesize(
-            self.hass, endpoint, api_key, ssml, output_format
+            get_async_client(self.hass), endpoint, api_key, ssml, output_format
         )
         return extension, audio

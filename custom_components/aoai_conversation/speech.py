@@ -5,9 +5,8 @@ OpenAI audio endpoints). The Speech endpoint differs per install (custom
 subdomain, e.g. ``https://<name>.cognitiveservices.azure.com/``, or a regional
 host), so the base endpoint URI and API key are configured per entity.
 
-All calls are plain REST over Home Assistant's shared httpx client -- no binary
-Speech SDK is required. Authentication uses the ``Ocp-Apim-Subscription-Key``
-header.
+All calls are plain REST over an ``httpx.AsyncClient`` -- no binary Speech SDK is
+required. Authentication uses the ``Ocp-Apim-Subscription-Key`` header.
 """
 
 from __future__ import annotations
@@ -18,9 +17,7 @@ from xml.sax.saxutils import escape
 
 import httpx
 
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import LOGGER
 
@@ -100,14 +97,13 @@ def build_ssml(
 
 
 async def async_synthesize(
-    hass: HomeAssistant,
+    client: httpx.AsyncClient,
     base: str,
     api_key: str,
     ssml: str,
     output_format: str,
 ) -> bytes:
     """Synthesize speech from SSML and return the raw audio bytes."""
-    client = get_async_client(hass)
     try:
         response = await client.post(
             speech_url(base, "tts"),
@@ -133,10 +129,9 @@ async def async_synthesize(
 
 
 async def async_list_voices(
-    hass: HomeAssistant, base: str, api_key: str
+    client: httpx.AsyncClient, base: str, api_key: str
 ) -> list[dict[str, Any]]:
     """Return the list of available neural voices for the endpoint."""
-    client = get_async_client(hass)
     try:
         response = await client.get(
             speech_url(base, "voices"),
@@ -162,7 +157,7 @@ async def async_list_voices(
 
 
 async def async_recognize(
-    hass: HomeAssistant,
+    client: httpx.AsyncClient,
     base: str,
     api_key: str,
     wav_audio: bytes,
@@ -173,7 +168,6 @@ async def async_recognize(
     Uses the short-audio, one-shot recognition endpoint (suitable for the brief
     voice commands issued through Home Assistant Assist).
     """
-    client = get_async_client(hass)
     try:
         response = await client.post(
             speech_url(base, "stt"),

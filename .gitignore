@@ -18,3 +18,7 @@ config/
 
 # OS / editor
 .DS_Store
+
+# Local smoketest secrets & output (never commit)
+.env
+smoketest-output/

@@ -104,7 +104,7 @@ async def test_tts_get_audio(
         return httpx.Response(200, content=b"MP3DATA")
 
     with patch(
-        "custom_components.aoai_conversation.speech.get_async_client",
+        "custom_components.aoai_conversation.tts.get_async_client",
         return_value=_mock_transport(handler),
     ):
         ext, audio = await entity.async_get_tts_audio(

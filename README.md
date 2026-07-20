@@ -122,6 +122,23 @@ uv run pytest
 > Debian/Ubuntu: `sudo apt-get install libturbojpeg0 ffmpeg` (the CI workflow does
 > this automatically).
 
+### Local smoketest (live)
+
+A standalone script validates the whole stack against your **real** Azure resources —
+LLM, voice listing, TTS, and a TTS→STT round-trip — using the integration's actual
+request code. All configuration comes from a **git-ignored `.env`** file; no secrets are
+printed or committed.
+
+```bash
+cp .env.example .env      # then fill in your endpoints, keys, voice, etc.
+mise run smoketest        # or: uv run python scripts/smoketest.py
+```
+
+It prints a per-check PASS/FAIL summary (and exits non-zero on failure), and saves the
+synthesized audio under `smoketest-output/` (also git-ignored). The round-trip synthesizes
+a German phrase as 16 kHz PCM WAV and feeds it back to STT, which also proves the
+custom-domain `tts/` / `stt/` endpoint paths work end-to-end.
+
 ### CI
 
 - **Validate** (`.github/workflows/validate.yaml`) — runs `hassfest` and HACS

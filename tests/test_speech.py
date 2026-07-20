@@ -1,7 +1,5 @@
 """Tests for the Azure AI Speech REST helpers (speech.py)."""
 
-from unittest.mock import patch
-
 import httpx
 import pytest
 
@@ -82,7 +80,7 @@ def test_build_ssml_prosody_and_style() -> None:
     assert "mstts:express-as" in ssml
 
 
-def _mock_transport(handler) -> httpx.AsyncClient:
+def _mock_client(handler) -> httpx.AsyncClient:
     return httpx.AsyncClient(transport=httpx.MockTransport(handler))
 
 
@@ -96,13 +94,13 @@ async def test_async_synthesize_success(hass: HomeAssistant) -> None:
         captured["body"] = request.content
         return httpx.Response(200, content=b"AUDIO")
 
-    with patch(
-        "custom_components.aoai_conversation.speech.get_async_client",
-        return_value=_mock_transport(handler),
-    ):
-        audio = await async_synthesize(
-            hass, BASE, "key", "<speak/>", "audio-24khz-48kbitrate-mono-mp3"
-        )
+    audio = await async_synthesize(
+        _mock_client(handler),
+        BASE,
+        "key",
+        "<speak/>",
+        "audio-24khz-48kbitrate-mono-mp3",
+    )
 
     assert audio == b"AUDIO"
     assert captured["url"].endswith("/cognitiveservices/v1")
@@ -120,14 +118,8 @@ async def test_async_synthesize_error(hass: HomeAssistant) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(401, text="denied")
 
-    with (
-        patch(
-            "custom_components.aoai_conversation.speech.get_async_client",
-            return_value=_mock_transport(handler),
-        ),
-        pytest.raises(HomeAssistantError),
-    ):
-        await async_synthesize(hass, BASE, "key", "<speak/>", "fmt")
+    with pytest.raises(HomeAssistantError):
+        await async_synthesize(_mock_client(handler), BASE, "key", "<speak/>", "fmt")
 
 
 async def test_async_list_voices(hass: HomeAssistant) -> None:
@@ -142,11 +134,7 @@ async def test_async_list_voices(hass: HomeAssistant) -> None:
             ],
         )
 
-    with patch(
-        "custom_components.aoai_conversation.speech.get_async_client",
-        return_value=_mock_transport(handler),
-    ):
-        voices = await async_list_voices(hass, BASE, "key")
+    voices = await async_list_voices(_mock_client(handler), BASE, "key")
 
     assert [v["ShortName"] for v in voices] == [
         "de-DE-KatjaNeural",
@@ -164,11 +152,7 @@ async def test_async_recognize_success(hass: HomeAssistant) -> None:
             200, json={"RecognitionStatus": "Success", "DisplayText": "Licht an"}
         )
 
-    with patch(
-        "custom_components.aoai_conversation.speech.get_async_client",
-        return_value=_mock_transport(handler),
-    ):
-        text = await async_recognize(hass, BASE, "key", b"WAV", "de-DE")
+    text = await async_recognize(_mock_client(handler), BASE, "key", b"WAV", "de-DE")
 
     assert text == "Licht an"
     assert "language=de-DE" in captured["url"]
@@ -181,10 +165,6 @@ async def test_async_recognize_no_match(hass: HomeAssistant) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"RecognitionStatus": "NoMatch"})
 
-    with patch(
-        "custom_components.aoai_conversation.speech.get_async_client",
-        return_value=_mock_transport(handler),
-    ):
-        text = await async_recognize(hass, BASE, "key", b"WAV", "de-DE")
+    text = await async_recognize(_mock_client(handler), BASE, "key", b"WAV", "de-DE")
 
     assert text is None

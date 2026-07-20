@@ -15,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
     CONF_STT_API_KEY,
@@ -183,7 +184,7 @@ class AzureSpeechSTTEntity(stt.SpeechToTextEntity, Entity):
 
         try:
             text = await async_recognize(
-                self.hass, endpoint, api_key, wav_data, language
+                get_async_client(self.hass), endpoint, api_key, wav_data, language
             )
         except HomeAssistantError as err:
             _LOGGER.error("Error during Azure Speech STT: %s", err)
