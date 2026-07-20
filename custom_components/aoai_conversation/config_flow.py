@@ -559,6 +559,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "gpt-image-1-mini",
                     ],
                     mode=SelectSelectorMode.DROPDOWN,
+                    # Allow entering an Azure image deployment name that differs
+                    # from the listed model names (e.g. a custom-named
+                    # "gpt-image-2" deployment).
+                    custom_value=True,
                 )
             )
 

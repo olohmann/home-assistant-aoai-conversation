@@ -19,12 +19,16 @@ resource's v1 API surface.
 - 💬 **Conversation agent** — control your home through Assist, with tool calling,
   streaming, web search, code interpreter and reasoning options (model dependent).
 - 🧠 **AI Task** — `ai_task.generate_data` (structured output) and
-  `ai_task.generate_image`.
+  `ai_task.generate_image`. The image model field accepts a **custom Azure
+  deployment name** (default `gpt-image-2`), so you can point it at your own
+  image deployment.
 - 🎙️ **Speech‑to‑Text** — via transcription deployments (e.g. `gpt-4o-mini-transcribe`).
 - 🔊 **Text‑to‑Speech** — via TTS deployments (e.g. `gpt-4o-mini-tts`).
-- 🛠️ **Services** — `aoai_conversation.generate_content` and
-  `aoai_conversation.generate_image` (deprecated upstream in favor of `ai_task.*`,
-  kept for parity).
+
+> **Removed actions.** The legacy `aoai_conversation.generate_content` and
+> `aoai_conversation.generate_image` actions are **not supported** — calling either
+> raises an error and logs a message directing you to the `ai_task.generate_data`
+> and `ai_task.generate_image` actions instead.
 
 ## Requirements
 

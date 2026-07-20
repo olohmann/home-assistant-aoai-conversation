@@ -123,3 +123,35 @@ async def test_user_flow_duplicate_aborts(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_ai_task_subentry_accepts_custom_image_deployment(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """The AI Task subentry flow accepts a custom Azure image deployment name."""
+    custom_deployment = "my-azure-gpt-image-2"
+
+    result = await hass.config_entries.subentries.async_init(
+        (setup_integration.entry_id, "ai_task_data"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # init step: name + advanced (recommended=False) to reach the model step.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"name": "Azure Image Task", "recommended": False},
+    )
+    assert result["step_id"] == "additional"
+
+    # additional step: accept defaults (gpt-4o-mini chat model).
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "model"
+
+    # model step: provide a custom image deployment name.
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"image_model": custom_deployment}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["image_model"] == custom_deployment

@@ -220,17 +220,15 @@
   "exceptions": {
     "invalid_config_entry": {
       "message": "Invalid config entry provided. Got {config_entry}"
+    },
+    "generate_image_removed": {
+      "message": "The 'generate_image' action is no longer supported. Use the 'ai_task.generate_image' action with an AI Task entity backed by an Azure image deployment (for example 'gpt-image-2') instead."
+    },
+    "generate_content_removed": {
+      "message": "The 'generate_content' action is no longer supported. Use the 'ai_task.generate_data' action with an AI Task entity instead."
     }
   },
   "issues": {
-    "deprecated_generate_content": {
-      "description": "Action 'aoai_conversation.generate_content' is deprecated and will be removed in the 2026.9.0 release. Please use the 'ai_task.generate_data' action instead",
-      "title": "Deprecated 'generate_content' action"
-    },
-    "deprecated_generate_image": {
-      "description": "Action 'aoai_conversation.generate_image' is deprecated and will be removed in the 2026.9.0 release. Please use the 'ai_task.generate_image' action instead",
-      "title": "Deprecated 'generate_image' action"
-    },
     "organization_verification_required": {
       "description": "Your organization must be verified to use this model. Please go to {platform_settings} and select Verify Organization. If you just verified, it can take up to 15 minutes for access to propagate.",
       "title": "Organization verification required"
