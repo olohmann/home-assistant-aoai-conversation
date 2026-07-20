@@ -62,6 +62,10 @@ e.g. German `de‑DE‑KatjaNeural`) via the Speech REST API — no OpenAI audio
 Copy `custom_components/aoai_conversation` into your Home Assistant
 `config/custom_components/` directory and restart Home Assistant.
 
+> The integration ships its own brand icon in `custom_components/aoai_conversation/brand/`
+> (supported natively since HA 2026.3). It may take a browser refresh / HA restart to
+> appear, as brand images are cached.
+
 ## Configuration
 
 1. Go to **Settings → Devices & Services → Add Integration → Azure OpenAI
