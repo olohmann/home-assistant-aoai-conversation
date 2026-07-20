@@ -1,0 +1,39 @@
+name: Lint & Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint-test:
+    name: Ruff & pytest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install system dependencies
+        # Native libraries required to import the Home Assistant integrations
+        # this component depends on (camera/turbojpeg, ffmpeg for tts/stt).
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libturbojpeg0 ffmpeg
+
+      - name: Sync dependencies
+        run: uv sync --frozen
+
+      - name: Ruff format check
+        run: uv run ruff format --check custom_components tests
+
+      - name: Ruff lint
+        run: uv run ruff check custom_components tests
+
+      - name: Pytest
+        run: uv run pytest

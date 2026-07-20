@@ -1,0 +1,14 @@
+{
+  "domain": "aoai_conversation",
+  "name": "Azure OpenAI Conversation",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@olohmann"],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://github.com/olohmann/home-assistant-aoai-conversation",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/olohmann/home-assistant-aoai-conversation/issues",
+  "requirements": ["openai==2.45.0"],
+  "version": "2026.7.0"
+}

@@ -1,0 +1,87 @@
+[project]
+name = "aoai-conversation"
+version = "2026.7.0"
+description = "Azure OpenAI Conversation integration for Home Assistant (conversation, AI Task, STT, TTS)."
+readme = "README.md"
+requires-python = ">=3.14.2"
+license = { text = "Apache-2.0" }
+authors = [{ name = "olohmann" }]
+
+# Runtime dependency of the integration itself (mirrors manifest.json requirements).
+# Pinned to match the Home Assistant release this integration targets.
+dependencies = ["openai==2.45.0"]
+
+[dependency-groups]
+dev = [
+  "homeassistant==2026.7.2",
+  "pytest-homeassistant-custom-component==0.13.346",
+  "ruff==0.14.2",
+  # Requirements of the HA integrations this component depends on
+  # (conversation / assist_pipeline / ai_task / tts), needed to import
+  # them during tests.
+  "hassil==3.8.0",
+  "home-assistant-intents==2026.6.24",
+  "mutagen==1.48.1",
+  "PyTurboJPEG==1.8.3",
+  "av==17.0.1",
+  "ha-ffmpeg==3.2.2",
+]
+
+[tool.uv]
+# Home Assistant ships its own constraints; let uv resolve freely for dev tooling.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+  "A",    # flake8-builtins
+  "ASYNC",# flake8-async
+  "B",    # flake8-bugbear
+  "C4",   # flake8-comprehensions
+  "C90",  # mccabe complexity
+  "D",    # pydocstyle
+  "E",    # pycodestyle errors
+  "F",    # pyflakes
+  "I",    # isort
+  "N",    # pep8-naming
+  "PGH",  # pygrep-hooks
+  "PL",   # pylint
+  "RUF",  # ruff-specific
+  "SIM",  # flake8-simplify
+  "UP",   # pyupgrade
+  "W",    # pycodestyle warnings
+]
+ignore = [
+  "D202",   # blank line after function docstring (HA convention allows it)
+  "D203",   # one-blank-line-before-class (conflicts with D211)
+  "D213",   # multi-line-summary-second-line (conflicts with D212)
+  # "too many ..." limits: HA relies on C901 (mccabe) instead.
+  "PLR0911",
+  "PLR0912",
+  "PLR0913",
+  "PLR0915",
+  "PLW2901",# loop variable overwritten (used intentionally upstream)
+  "RUF012", # mutable class attrs without ClassVar (HA entities do this)
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+combine-as-imports = true
+known-first-party = ["homeassistant", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D100", "D103", "D104", "PLR2004", "S101"]
