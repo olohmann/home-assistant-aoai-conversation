@@ -22,6 +22,12 @@ AZURE_API_VERSION = "preview"
 
 CONF_CHAT_MODEL = "chat_model"
 CONF_IMAGE_MODEL = "image_model"
+# Microsoft Foundry Agent (Agent Service) target for a conversation entity.
+# When agent_name is set, the conversation calls the persistent Foundry agent
+# via the Responses API (agent_reference) instead of a chat model deployment.
+CONF_AGENT_ENDPOINT = "agent_endpoint"
+CONF_AGENT_NAME = "agent_name"
+CONF_AGENT_VERSION = "agent_version"
 CONF_CODE_INTERPRETER = "code_interpreter"
 CONF_FILENAMES = "filenames"
 CONF_MAX_TOKENS = "max_tokens"

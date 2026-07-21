@@ -182,3 +182,80 @@ async def test_conversation_subentry_sets_model_in_recommended_mode(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["chat_model"] == "my-gpt4o-deployment"
+
+
+async def test_conversation_subentry_foundry_agent_mode(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """A conversation can target a Foundry agent instead of a model."""
+    result = await hass.config_entries.subentries.async_init(
+        (setup_integration.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "House Agent",
+            "agent_endpoint": ("https://res.services.ai.azure.com/api/projects/proj"),
+            "agent_name": "MyHouseAgent",
+            "recommended": True,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["agent_name"] == "MyHouseAgent"
+    assert result["data"]["agent_endpoint"].endswith("/projects/proj")
+    assert "chat_model" not in result["data"]
+
+
+async def test_conversation_subentry_backend_required(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """Neither a model nor an agent is an error."""
+    result = await hass.config_entries.subentries.async_init(
+        (setup_integration.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"name": "Empty", "recommended": True},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "backend_required"}
+
+
+async def test_conversation_subentry_backend_conflict(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """Both a model and an agent is an error."""
+    result = await hass.config_entries.subentries.async_init(
+        (setup_integration.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Both",
+            "chat_model": "gpt-4.1-mini",
+            "agent_endpoint": "https://res.services.ai.azure.com/api/projects/proj",
+            "agent_name": "MyHouseAgent",
+            "recommended": True,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "backend_conflict"}
+
+
+async def test_conversation_subentry_agent_requires_endpoint(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """An agent without a project endpoint is an error."""
+    result = await hass.config_entries.subentries.async_init(
+        (setup_integration.entry_id, "conversation"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"name": "NoEndpoint", "agent_name": "MyHouseAgent", "recommended": True},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"agent_endpoint": "agent_endpoint_required"}

@@ -25,6 +25,7 @@ from pathlib import Path
 import sys
 
 import httpx
+import openai
 
 # Make the custom_components package importable when run from the repo root.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -84,7 +85,6 @@ def _speech_key(kind: str) -> str:
 
 async def check_llm() -> str:
     """Validate the Azure OpenAI connection with a tiny Responses call."""
-    import openai
 
     endpoint = _require("AOAI_LLM_ENDPOINT")
     api_key = _require("AOAI_LLM_API_KEY")
@@ -108,6 +108,36 @@ async def check_llm() -> str:
         models = await client.models.list()
         count = len(getattr(models, "data", []) or [])
         return f"responses.create unavailable; models.list returned {count} models"
+    finally:
+        await client.close()
+
+
+async def check_foundry_agent() -> str:
+    """Call a persistent Foundry agent via the Responses API (agent_reference)."""
+    endpoint = os.environ.get("AOAI_AGENT_ENDPOINT", "").strip()
+    agent_name = os.environ.get("AOAI_AGENT_NAME", "").strip()
+    if not endpoint or not agent_name:
+        return "skipped (set AOAI_AGENT_ENDPOINT and AOAI_AGENT_NAME to test)"
+
+    api_key = os.environ.get("AOAI_AGENT_API_KEY", "").strip() or _require(
+        "AOAI_LLM_API_KEY"
+    )
+    agent_reference: dict = {"type": "agent_reference", "name": agent_name}
+    if version := os.environ.get("AOAI_AGENT_VERSION", "").strip():
+        agent_reference["version"] = version
+
+    client = openai.AsyncOpenAI(
+        base_url=normalize_azure_endpoint(endpoint),
+        api_key=api_key,
+        default_query={"api-version": "preview"},
+    )
+    try:
+        response = await client.responses.create(
+            input="Reply with the single word: OK",
+            extra_body={"agent_reference": agent_reference},
+        )
+        text = (response.output_text or "").strip()
+        return f"agent={agent_name!r} responded: {text!r}"
     finally:
         await client.close()
 
@@ -197,6 +227,13 @@ async def main() -> int:
         results.append(("LLM (Azure OpenAI)", True, detail))
     except Exception as err:
         results.append(("LLM (Azure OpenAI)", False, str(err)))
+
+    # Foundry agent check (optional; skipped unless configured).
+    try:
+        detail = await check_foundry_agent()
+        results.append(("Foundry agent", True, detail))
+    except Exception as err:
+        results.append(("Foundry agent", False, str(err)))
 
     # Speech checks share one httpx client.
     async with httpx.AsyncClient() as client:

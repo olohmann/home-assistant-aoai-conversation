@@ -14,9 +14,10 @@ e.g. German `de‑DE‑KatjaNeural`) via the Speech REST API — no OpenAI audio
 
 ## Features
 
-- 💬 **Conversation agent** (Azure OpenAI) — control your home through Assist, with
-  tool calling, streaming, web search, code interpreter and reasoning options
-  (model dependent). Configured with **model + endpoint + API key**.
+- 💬 **Conversation agent** (Azure OpenAI, or a **Microsoft Foundry Agent**) — control
+  your home through Assist, with tool calling, streaming, web search, code interpreter
+  and reasoning options (model dependent). Configured with **model + endpoint + API key**,
+  or point it at a persistent **Foundry agent** (see below).
 - 🧠 **AI Task** (Azure OpenAI) — `ai_task.generate_data` (structured output) and
   `ai_task.generate_image`. The image model field accepts a **custom Azure
   deployment name** (default `gpt-image-2`).
@@ -94,6 +95,22 @@ Copy `custom_components/aoai_conversation` into your Home Assistant
 > AI Services resources) or a **regional** Speech host
 > (`https://<region>.tts.speech.microsoft.com/` / `…stt…`); the correct REST paths are
 > appended automatically for each form.
+
+### Use a Microsoft Foundry Agent (instead of a model)
+
+A **Conversation** entity can route to a persistent **Microsoft Foundry agent** (Azure
+AI Foundry Agent Service) instead of a plain chat‑model deployment. In the Conversation
+subentry, leave **Model** empty and set:
+
+- **Foundry agent project endpoint** — the project endpoint from the Foundry welcome
+  screen, e.g. `https://your-resource.services.ai.azure.com/api/projects/your-project`.
+- **Foundry agent name** — the name of your persistent agent.
+- **Foundry agent version** — optional (defaults to the latest).
+
+The same **API key** is reused (project endpoints accept API‑key auth). The agent is
+called through the Responses API (`agent_reference`), and Home Assistant's device‑control
+tools are still passed, so the agent can control the house — provided the agent accepts
+request‑level tools. Each config is either a **model** or an **agent**, not both.
 
 To use the conversation agent, assign it (and the STT/TTS entities) to an
 [Assist pipeline](https://www.home-assistant.io/voice_control/voice_remote_local_assistant/).

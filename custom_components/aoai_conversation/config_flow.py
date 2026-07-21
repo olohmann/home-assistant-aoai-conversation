@@ -44,6 +44,9 @@ from homeassistant.helpers.typing import VolDictType
 
 from .client import create_client
 from .const import (
+    CONF_AGENT_ENDPOINT,
+    CONF_AGENT_NAME,
+    CONF_AGENT_VERSION,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
     CONF_ENDPOINT,
@@ -313,15 +316,38 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 }
             )
 
-        # The chat model is the Azure *deployment name*: required per install,
-        # with no default (deployment names vary and there is no sensible
-        # universal default). Always shown, not hidden behind advanced options.
+        # The chat model is the Azure *deployment name* (model mode). No default
+        # (deployment names vary). Optional here because the conversation may
+        # instead target a Foundry agent (agent mode) below.
         step_schema[
-            vol.Required(
+            vol.Optional(
                 CONF_CHAT_MODEL,
                 description={"suggested_value": options.get(CONF_CHAT_MODEL)},
             )
         ] = str
+
+        # Foundry agent mode (conversation only): route to a persistent agent.
+        if self._subentry_type == "conversation":
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_AGENT_ENDPOINT,
+                        description={
+                            "suggested_value": options.get(CONF_AGENT_ENDPOINT)
+                        },
+                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
+                    vol.Optional(
+                        CONF_AGENT_NAME,
+                        description={"suggested_value": options.get(CONF_AGENT_NAME)},
+                    ): str,
+                    vol.Optional(
+                        CONF_AGENT_VERSION,
+                        description={
+                            "suggested_value": options.get(CONF_AGENT_VERSION)
+                        },
+                    ): str,
+                }
+            )
 
         step_schema[
             vol.Required(CONF_RECOMMENDED, default=options.get(CONF_RECOMMENDED, False))
@@ -332,11 +358,31 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             if not user_input.get(CONF_LLM_HASS_API):
                 user_input.pop(CONF_LLM_HASS_API, None)
 
-            if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
+            # Drop blank optional fields so presence checks are meaningful.
+            for key in (
+                CONF_CHAT_MODEL,
+                CONF_AGENT_ENDPOINT,
+                CONF_AGENT_NAME,
+                CONF_AGENT_VERSION,
+            ):
+                if not user_input.get(key):
+                    user_input.pop(key, None)
+
+            agent_mode = bool(user_input.get(CONF_AGENT_NAME))
+            model_mode = bool(user_input.get(CONF_CHAT_MODEL))
+
+            if agent_mode and model_mode:
+                errors["base"] = "backend_conflict"
+            elif not agent_mode and not model_mode:
+                errors["base"] = "backend_required"
+            elif agent_mode and not user_input.get(CONF_AGENT_ENDPOINT):
+                errors[CONF_AGENT_ENDPOINT] = "agent_endpoint_required"
+            elif model_mode and user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                 errors[CONF_CHAT_MODEL] = "model_not_supported"
 
             if not errors:
-                if user_input[CONF_RECOMMENDED]:
+                # Agent mode has no model-specific options; create directly.
+                if agent_mode or user_input[CONF_RECOMMENDED]:
                     if self._is_new:
                         return self.async_create_entry(
                             title=user_input.pop(CONF_NAME),

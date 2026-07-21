@@ -61,6 +61,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir, llm
@@ -68,7 +69,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
+from .client import create_client
 from .const import (
+    CONF_AGENT_ENDPOINT,
+    CONF_AGENT_NAME,
+    CONF_AGENT_VERSION,
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
@@ -483,6 +488,7 @@ class OpenAIBaseLLMEntity(Entity):
         """Initialize the entity."""
         self.entry = entry
         self.subentry = subentry
+        self._agent_client: openai.AsyncClient | None = None
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
@@ -491,6 +497,22 @@ class OpenAIBaseLLMEntity(Entity):
             model=subentry.data.get(CONF_CHAT_MODEL, ""),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+
+    def _get_client(self) -> openai.AsyncClient:
+        """Return the client to use for this entity.
+
+        In Foundry agent mode the request targets the project endpoint, which
+        differs from the resource endpoint held by ``entry.runtime_data``; build
+        and cache a dedicated client (reusing the same API key).
+        """
+        agent_endpoint = self.subentry.data.get(CONF_AGENT_ENDPOINT)
+        if not self.subentry.data.get(CONF_AGENT_NAME) or not agent_endpoint:
+            return self.entry.runtime_data
+        if self._agent_client is None:
+            self._agent_client = create_client(
+                self.hass, self.entry.data[CONF_API_KEY], agent_endpoint
+            )
+        return self._agent_client
 
     async def _async_handle_chat_log(  # noqa: C901
         self,
@@ -505,55 +527,75 @@ class OpenAIBaseLLMEntity(Entity):
 
         messages = _convert_content_to_param(chat_log.content)
 
-        model_args = ResponseCreateParamsStreaming(
-            model=options[CONF_CHAT_MODEL],
-            input=messages,
-            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-            user=chat_log.conversation_id,
-            service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
-            store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
-            stream=True,
-        )
+        agent_name = options.get(CONF_AGENT_NAME)
 
-        if model_args["model"].startswith(("o", "gpt-5")):
-            reasoning: Reasoning = {
-                "effort": options.get(
-                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+        if agent_name:
+            # Foundry agent mode: target a persistent agent via agent_reference.
+            # The agent owns the model and its sampling/reasoning options, so we
+            # send a minimal request (input + tools) and omit model-only params.
+            agent_reference: dict[str, Any] = {
+                "type": "agent_reference",
+                "name": agent_name,
+            }
+            if agent_version := options.get(CONF_AGENT_VERSION):
+                agent_reference["version"] = str(agent_version)
+            model_args = {
+                "input": messages,
+                "user": chat_log.conversation_id,
+                "store": options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
+                "stream": True,
+                "extra_body": {"agent_reference": agent_reference},
+            }
+        else:
+            model_args = ResponseCreateParamsStreaming(
+                model=options[CONF_CHAT_MODEL],
+                input=messages,
+                max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+                user=chat_log.conversation_id,
+                service_tier=options.get(CONF_SERVICE_TIER, RECOMMENDED_SERVICE_TIER),
+                store=options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
+                stream=True,
+            )
+
+            if model_args["model"].startswith(("o", "gpt-5")):
+                reasoning: Reasoning = {
+                    "effort": options.get(
+                        CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                    )
+                    if not model_args["model"].startswith("gpt-5-pro")
+                    else "high",  # GPT-5 pro only supports reasoning.effort: high
+                }
+
+                reasoning_summary = options.get(
+                    CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
                 )
-                if not model_args["model"].startswith("gpt-5-pro")
-                else "high",  # GPT-5 pro only supports reasoning.effort: high
-            }
+                if reasoning_summary != "off":
+                    reasoning["summary"] = reasoning_summary
 
-            reasoning_summary = options.get(
-                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
-            )
-            if reasoning_summary != "off":
-                reasoning["summary"] = reasoning_summary
+                if options.get(CONF_PRO_MODE, RECOMMENDED_PRO_MODE):
+                    reasoning["mode"] = "pro"
 
-            if options.get(CONF_PRO_MODE, RECOMMENDED_PRO_MODE):
-                reasoning["mode"] = "pro"
+                model_args["reasoning"] = reasoning
+                model_args["include"] = ["reasoning.encrypted_content"]
 
-            model_args["reasoning"] = reasoning
-            model_args["include"] = ["reasoning.encrypted_content"]
+            if (
+                not model_args["model"].startswith("gpt-5")
+                or model_args["reasoning"]["effort"] == "none"  # type: ignore[index]
+            ):
+                model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
+                model_args["temperature"] = options.get(
+                    CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                )
 
-        if (
-            not model_args["model"].startswith("gpt-5")
-            or model_args["reasoning"]["effort"] == "none"  # type: ignore[index]
-        ):
-            model_args["top_p"] = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
-            model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-            )
+            if model_args["model"].startswith("gpt-5"):
+                model_args["text"] = {
+                    "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
+                }
 
-        if model_args["model"].startswith("gpt-5"):
-            model_args["text"] = {
-                "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
-            }
-
-        if not model_args["model"].startswith(
-            tuple(UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS)
-        ):
-            model_args["prompt_cache_retention"] = "24h"
+            if not model_args["model"].startswith(
+                tuple(UNSUPPORTED_EXTENDED_CACHE_RETENTION_MODELS)
+            ):
+                model_args["prompt_cache_retention"] = "24h"
 
         tools: list[ToolParam] = []
         if chat_log.llm_api:
@@ -658,7 +700,7 @@ class OpenAIBaseLLMEntity(Entity):
                 },
             }
 
-        client = self.entry.runtime_data
+        client = self._get_client()
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(max_iterations):
@@ -676,7 +718,7 @@ class OpenAIBaseLLMEntity(Entity):
                 )
             except openai.RateLimitError as err:
                 if (
-                    model_args["service_tier"] == "flex"
+                    model_args.get("service_tier") == "flex"
                     and "resource unavailable" in (err.message or "").lower()
                 ):
                     LOGGER.info(

@@ -112,7 +112,10 @@
       "error": {
         "code_interpreter_minimal_reasoning": "Code interpreter is not supported with minimal reasoning effort",
         "model_not_supported": "This model is not supported, please select a different model",
-        "web_search_minimal_reasoning": "Web search is currently not supported with minimal reasoning effort"
+        "web_search_minimal_reasoning": "Web search is currently not supported with minimal reasoning effort",
+        "backend_conflict": "Choose either a chat model deployment or a Foundry agent, not both.",
+        "backend_required": "Enter a chat model deployment name, or a Foundry agent name to route the conversation to an agent.",
+        "agent_endpoint_required": "A Foundry project endpoint is required when using a Foundry agent."
       },
       "initiate_flow": {
         "reconfigure": "Reconfigure conversation agent",
@@ -138,11 +141,17 @@
             "name": "Name",
             "chat_model": "Model (Azure deployment name)",
             "prompt": "Instructions",
-            "recommended": "Recommended model settings"
+            "recommended": "Recommended model settings",
+            "agent_endpoint": "Foundry agent project endpoint",
+            "agent_name": "Foundry agent name",
+            "agent_version": "Foundry agent version"
           },
           "data_description": {
             "prompt": "Instruct how the LLM should respond. This can be a template.",
-            "chat_model": "The name of your Azure OpenAI chat model *deployment* (not the base model name), e.g. `gpt-4.1-mini` or your custom deployment name."
+            "chat_model": "The name of your Azure OpenAI chat model *deployment* (not the base model name), e.g. `gpt-4.1-mini` or your custom deployment name.",
+            "agent_endpoint": "The Foundry *project* endpoint that hosts the agent, e.g. `https://your-resource.services.ai.azure.com/api/projects/your-project`. Leave the model empty when using an agent.",
+            "agent_name": "The name of the persistent Microsoft Foundry agent to call. Set this to route the conversation to a Foundry agent instead of a model.",
+            "agent_version": "Optional agent version; leave blank to use the latest."
           }
         },
         "model": {
