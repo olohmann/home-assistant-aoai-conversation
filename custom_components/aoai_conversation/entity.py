@@ -119,6 +119,24 @@ if TYPE_CHECKING:
 MAX_TOOL_ITERATIONS = 10
 
 
+def _error_message(err: openai.OpenAIError) -> str:
+    """Extract the clearest human-readable message from an OpenAI/Foundry error.
+
+    Foundry surfaces agent/tool failures (e.g. an MCP tool call that could not
+    match a Home Assistant entity) as API errors; pass the underlying message
+    through so the assistant can tell the user the actual reason.
+    """
+    body = getattr(err, "body", None)
+    if isinstance(body, dict):
+        error = body.get("error")
+        if isinstance(error, dict) and error.get("message"):
+            return str(error["message"])
+        if body.get("message"):
+            return str(body["message"])
+    message = getattr(err, "message", None)
+    return str(message or err)
+
+
 def _adjust_schema(schema: dict[str, Any]) -> None:
     """Adjust the output schema to be compatible with OpenAI API."""
     if schema["type"] == "object":
@@ -754,7 +772,9 @@ class OpenAIBaseLLMEntity(Entity):
                     )
 
                 LOGGER.error("Error talking to OpenAI: %s", err)
-                raise HomeAssistantError("Error talking to OpenAI") from err
+                raise HomeAssistantError(
+                    f"Error talking to Azure OpenAI: {_error_message(err)}"
+                ) from err
 
             if not chat_log.unresponded_tool_results:
                 break
