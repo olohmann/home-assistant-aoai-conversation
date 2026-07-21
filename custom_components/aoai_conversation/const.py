@@ -17,8 +17,6 @@ DEFAULT_NAME = "Azure OpenAI Conversation"
 
 # Azure-specific connection settings.
 CONF_ENDPOINT = "endpoint"
-# The v1 preview surface exposes the Responses API used by this integration.
-AZURE_API_VERSION = "preview"
 
 CONF_CHAT_MODEL = "chat_model"
 CONF_IMAGE_MODEL = "image_model"

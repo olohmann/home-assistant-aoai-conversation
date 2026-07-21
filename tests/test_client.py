@@ -6,7 +6,6 @@ from custom_components.aoai_conversation.client import (
     create_client,
     normalize_azure_endpoint,
 )
-from custom_components.aoai_conversation.const import AZURE_API_VERSION
 from homeassistant.core import HomeAssistant
 
 
@@ -41,10 +40,10 @@ def test_normalize_azure_endpoint(raw: str, expected: str) -> None:
 
 
 async def test_create_client_configuration(hass: HomeAssistant) -> None:
-    """The client is configured with the Azure base URL and api-version."""
+    """The client targets the versionless v1 base URL with no api-version query."""
     client = create_client(hass, "sk-key", "https://res.services.ai.azure.com")
 
     assert str(client.base_url) == "https://res.services.ai.azure.com/openai/v1/"
     assert client.api_key == "sk-key"
-    # The api-version is pinned as a default query parameter.
-    assert dict(client._custom_query) == {"api-version": AZURE_API_VERSION}
+    # The /openai/v1/ path rejects api-version, so none is sent.
+    assert dict(client._custom_query) == {}

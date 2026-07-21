@@ -93,7 +93,6 @@ async def check_llm() -> str:
     client = openai.AsyncOpenAI(
         base_url=normalize_azure_endpoint(endpoint),
         api_key=api_key,
-        default_query={"api-version": "preview"},
     )
     try:
         response = await client.responses.create(
@@ -129,7 +128,6 @@ async def check_foundry_agent() -> str:
     client = openai.AsyncOpenAI(
         base_url=normalize_azure_endpoint(endpoint),
         api_key=api_key,
-        default_query={"api-version": "preview"},
     )
     try:
         response = await client.responses.create(

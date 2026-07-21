@@ -13,8 +13,6 @@ import openai
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import AZURE_API_VERSION
-
 
 def normalize_azure_endpoint(endpoint: str) -> str:
     """Return a base URL pointing at the Azure OpenAI v1 API surface.
@@ -36,10 +34,14 @@ def normalize_azure_endpoint(endpoint: str) -> str:
 def create_client(
     hass: HomeAssistant, api_key: str, endpoint: str
 ) -> openai.AsyncOpenAI:
-    """Create an ``AsyncOpenAI`` client configured for Azure OpenAI."""
+    """Create an ``AsyncOpenAI`` client configured for Azure OpenAI.
+
+    The base URL targets the versionless ``/openai/v1/`` surface, which does not
+    accept an ``api-version`` query parameter (the service rejects it), so none
+    is sent.
+    """
     return openai.AsyncOpenAI(
         base_url=normalize_azure_endpoint(endpoint),
         api_key=api_key,
-        default_query={"api-version": AZURE_API_VERSION},
         http_client=get_async_client(hass),
     )
