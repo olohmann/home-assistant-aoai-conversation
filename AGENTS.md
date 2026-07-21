@@ -34,8 +34,10 @@ isolated** so upstream syncs stay easy. Latest HA only; **no backwards compatibi
   - **Conversation** may instead target a **Microsoft Foundry agent**: set
     `agent_name` + `agent_endpoint` (project endpoint) — exactly one of model/agent.
     The entity calls the Responses API with `extra_body={"agent_reference": {...}}` and
-    no `model`, against a dedicated client for the project endpoint (same API key). HA
-    tools are still passed so the agent can control devices.
+    no `model`, against a dedicated client for the project endpoint (same API key).
+    **Agent mode sends NO `tools`** (the Responses API rejects request-level tools when
+    an agent is specified); device control is wired on the agent side via HA's MCP
+    Server. **Model mode** still passes HA's Assist tools + all model options as usual.
   - **STT** subentry carries its own `stt_endpoint` + `stt_api_key` + `stt_language`.
   - **TTS** subentry carries its own `tts_endpoint` + `tts_api_key` + `tts_voice`
     (+ output format / rate / pitch / style).

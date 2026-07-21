@@ -108,9 +108,19 @@ subentry, leave **Model** empty and set:
 - **Foundry agent version** — optional (defaults to the latest).
 
 The same **API key** is reused (project endpoints accept API‑key auth). The agent is
-called through the Responses API (`agent_reference`), and Home Assistant's device‑control
-tools are still passed, so the agent can control the house — provided the agent accepts
-request‑level tools. Each config is either a **model** or an **agent**, not both.
+called through the Responses API (`agent_reference`). Each config is either a **model**
+or an **agent**, not both.
+
+> **Device control in agent mode.** A persisted Foundry agent uses **only its own
+> tools** — the Responses API does not accept request‑level tools when an agent is
+> specified, so Home Assistant's Assist tools are **not** passed in agent mode. To let
+> the agent control your home, enable Home Assistant's
+> [**Model Context Protocol Server**](https://www.home-assistant.io/integrations/mcp_server/)
+> and add it as an **MCP tool** on your agent in the Foundry portal. The agent then calls
+> HA's tools server‑side. (The cloud agent must be able to reach your HA instance — e.g.
+> via Home Assistant Cloud or a public/reverse‑proxied URL with a long‑lived token.)
+> In plain **model** mode, HA's Assist tools are passed as usual and device control works
+> out of the box.
 
 To use the conversation agent, assign it (and the STT/TTS entities) to an
 [Assist pipeline](https://www.home-assistant.io/voice_control/voice_remote_local_assistant/).

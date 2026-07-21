@@ -531,8 +531,12 @@ class OpenAIBaseLLMEntity(Entity):
 
         if agent_name:
             # Foundry agent mode: target a persistent agent via agent_reference.
-            # The agent owns the model and its sampling/reasoning options, so we
-            # send a minimal request (input + tools) and omit model-only params.
+            # The agent owns its model, options AND tools; the Responses API
+            # rejects request-level params (e.g. `tools`, and model-only options)
+            # when an agent is specified, so send the minimal accepted request.
+            # Home Assistant device control in agent mode is wired on the agent
+            # side (e.g. HA's MCP Server added as an MCP tool to the agent), not
+            # by passing tools here.
             agent_reference: dict[str, Any] = {
                 "type": "agent_reference",
                 "name": agent_name,
@@ -541,8 +545,6 @@ class OpenAIBaseLLMEntity(Entity):
                 agent_reference["version"] = str(agent_version)
             model_args = {
                 "input": messages,
-                "user": chat_log.conversation_id,
-                "store": options.get(CONF_STORE_RESPONSES, RECOMMENDED_STORE_RESPONSES),
                 "stream": True,
                 "extra_body": {"agent_reference": agent_reference},
             }
@@ -669,7 +671,7 @@ class OpenAIBaseLLMEntity(Entity):
             model_args["store"] = True
             model_args["tool_choice"] = ToolChoiceTypesParam(type="image_generation")
 
-        if tools:
+        if tools and not agent_name:
             model_args["tools"] = tools
 
         last_content = chat_log.content[-1]
