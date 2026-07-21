@@ -1,6 +1,7 @@
 """Base entity for OpenAI."""
 
 import base64
+from collections import OrderedDict
 from collections.abc import AsyncGenerator, Callable, Iterable
 import json
 from mimetypes import guess_file_type
@@ -69,7 +70,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import slugify
 
-from .client import create_client
+from .client import (
+    async_create_conversation,
+    async_delete_conversation,
+    create_client,
+)
 from .const import (
     CONF_AGENT_ENDPOINT,
     CONF_AGENT_NAME,
@@ -117,6 +122,9 @@ if TYPE_CHECKING:
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
+
+# Cap the number of remembered Foundry agent conversation threads per entity.
+_MAX_AGENT_CONVERSATIONS = 50
 
 
 def _error_message(err: openai.OpenAIError) -> str:
@@ -507,6 +515,9 @@ class OpenAIBaseLLMEntity(Entity):
         self.entry = entry
         self.subentry = subentry
         self._agent_client: openai.AsyncClient | None = None
+        # Maps a Home Assistant conversation id -> Foundry conversation (thread)
+        # id, so a hosted agent keeps context across turns of the same session.
+        self._agent_conversations: OrderedDict[str, str] = OrderedDict()
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
@@ -531,6 +542,48 @@ class OpenAIBaseLLMEntity(Entity):
                 self.hass, self.entry.data[CONF_API_KEY], agent_endpoint
             )
         return self._agent_client
+
+    async def _async_get_agent_conversation(
+        self, ha_conversation_id: str
+    ) -> str | None:
+        """Return a Foundry conversation (thread) id for the HA conversation.
+
+        Creates a server-side thread on first use and reuses it for subsequent
+        turns so the hosted agent keeps context. Returns ``None`` if threading
+        is unavailable, in which case the caller falls back to sending history.
+        """
+        endpoint = self.subentry.data.get(CONF_AGENT_ENDPOINT)
+        if not endpoint:
+            return None
+
+        if (existing := self._agent_conversations.get(ha_conversation_id)) is not None:
+            self._agent_conversations.move_to_end(ha_conversation_id)
+            return existing
+
+        api_key = self.entry.data[CONF_API_KEY]
+        try:
+            conversation_id = await async_create_conversation(
+                self.hass, endpoint, api_key
+            )
+        except HomeAssistantError as err:
+            LOGGER.warning("Could not create Azure conversation thread: %s", err)
+            return None
+
+        self._agent_conversations[ha_conversation_id] = conversation_id
+        LOGGER.debug(
+            "Created Azure conversation %s for HA conversation %s",
+            conversation_id,
+            ha_conversation_id,
+        )
+        # Evict oldest threads (best-effort delete) to avoid unbounded growth.
+        while len(self._agent_conversations) > _MAX_AGENT_CONVERSATIONS:
+            _, old_conversation_id = self._agent_conversations.popitem(last=False)
+            self.hass.async_create_task(
+                async_delete_conversation(
+                    self.hass, endpoint, api_key, old_conversation_id
+                )
+            )
+        return conversation_id
 
     async def _async_handle_chat_log(  # noqa: C901
         self,
@@ -561,10 +614,22 @@ class OpenAIBaseLLMEntity(Entity):
             }
             if agent_version := options.get(CONF_AGENT_VERSION):
                 agent_reference["version"] = str(agent_version)
+            extra_body: dict[str, Any] = {"agent_reference": agent_reference}
+
+            # Use a server-side conversation (thread) so the agent keeps context
+            # across turns. When threaded, send only the newest user turn; the
+            # thread holds the rest. If unavailable, fall back to full history.
+            conversation_id = await self._async_get_agent_conversation(
+                chat_log.conversation_id
+            )
+            if conversation_id:
+                extra_body["conversation"] = conversation_id
+                messages = _convert_content_to_param([chat_log.content[-1]])
+
             model_args = {
                 "input": messages,
                 "stream": True,
-                "extra_body": {"agent_reference": agent_reference},
+                "extra_body": extra_body,
             }
         else:
             model_args = ResponseCreateParamsStreaming(

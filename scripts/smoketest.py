@@ -129,13 +129,37 @@ async def check_foundry_agent() -> str:
         base_url=normalize_azure_endpoint(endpoint),
         api_key=api_key,
     )
+    conversations_url = f"{normalize_azure_endpoint(endpoint)}conversations"
     try:
-        response = await client.responses.create(
-            input="Reply with the single word: OK",
-            extra_body={"agent_reference": agent_reference},
+        # Create a server-side conversation (thread) and do a 2-turn exchange to
+        # prove the agent retains context across turns.
+        async with httpx.AsyncClient() as http:
+            resp = await http.post(
+                conversations_url,
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={},
+                timeout=30.0,
+            )
+            resp.raise_for_status()
+            conv_id = resp.json()["id"]
+
+        extra = {"agent_reference": agent_reference, "conversation": conv_id}
+        first = await client.responses.create(
+            input="My favorite color is teal. Reply with the single word: OK.",
+            extra_body=extra,
         )
-        text = (response.output_text or "").strip()
-        return f"agent={agent_name!r} responded: {text!r}"
+        second = await client.responses.create(
+            input="What is my favorite color? Reply with one word.",
+            extra_body=extra,
+        )
+        return (
+            f"agent={agent_name!r} thread={conv_id} "
+            f"turn1={(first.output_text or '').strip()!r} "
+            f"turn2={(second.output_text or '').strip()!r}"
+        )
     finally:
         await client.close()
 

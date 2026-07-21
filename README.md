@@ -111,6 +111,14 @@ The same **API key** is reused (project endpoints accept API‑key auth). The ag
 called through the Responses API (`agent_reference`). Each config is either a **model**
 or an **agent**, not both.
 
+> **Conversation memory.** In agent mode the integration creates a server‑side Foundry
+> **conversation (thread)** per Home Assistant conversation and reuses it across turns,
+> so the hosted agent keeps context (its memory/tools operate within the thread). Only
+> the newest user turn is sent each time; the thread holds the rest. Threads are created
+> on demand, capped/evicted per entity (older ones deleted best‑effort), and otherwise
+> expire under Foundry's retention policy. A Home Assistant conversation ends after
+> ~5 minutes of inactivity, after which the next turn starts a fresh thread.
+
 > **Device control in agent mode.** A persisted Foundry agent uses **only its own
 > tools** — the Responses API does not accept request‑level tools when an agent is
 > specified, so Home Assistant's Assist tools are **not** passed in agent mode. To let

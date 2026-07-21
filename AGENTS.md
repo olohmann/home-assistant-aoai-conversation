@@ -37,7 +37,10 @@ isolated** so upstream syncs stay easy. Latest HA only; **no backwards compatibi
     no `model`, against a dedicated client for the project endpoint (same API key).
     **Agent mode sends NO `tools`** (the Responses API rejects request-level tools when
     an agent is specified); device control is wired on the agent side via HA's MCP
-    Server. **Model mode** still passes HA's Assist tools + all model options as usual.
+    Server. In agent mode it also creates/reuses a server-side Foundry **conversation
+    (thread)** per HA `conversation_id` (`extra_body["conversation"]`) so the agent keeps
+    context, sending only the newest turn. **Model mode** still passes HA's Assist tools +
+    all model options as usual.
   - **STT** subentry carries its own `stt_endpoint` + `stt_api_key` + `stt_language`.
   - **TTS** subentry carries its own `tts_endpoint` + `tts_api_key` + `tts_voice`
     (+ output format / rate / pitch / style).

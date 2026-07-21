@@ -1,8 +1,14 @@
 """Tests for the Azure AI Speech REST helpers (speech.py)."""
 
+from unittest.mock import patch
+
 import httpx
 import pytest
 
+from custom_components.aoai_conversation.client import (
+    async_create_conversation,
+    async_delete_conversation,
+)
 from custom_components.aoai_conversation.speech import (
     async_list_voices,
     async_recognize,
@@ -168,3 +174,47 @@ async def test_async_recognize_no_match(hass: HomeAssistant) -> None:
     text = await async_recognize(_mock_client(handler), BASE, "key", b"WAV", "de-DE")
 
     assert text is None
+
+
+async def test_async_create_conversation(hass: HomeAssistant) -> None:
+    """Creating a conversation posts to the project endpoint and returns the id."""
+
+    captured: dict = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured["url"] = str(request.url)
+        captured["auth"] = request.headers.get("Authorization")
+        return httpx.Response(200, json={"id": "conv_abc123"})
+
+    with patch(
+        "custom_components.aoai_conversation.client.get_async_client",
+        return_value=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+    ):
+        conv_id = await async_create_conversation(
+            hass,
+            "https://res.services.ai.azure.com/api/projects/proj",
+            "sk-key",
+        )
+
+    assert conv_id == "conv_abc123"
+    assert captured["url"].endswith("/api/projects/proj/openai/v1/conversations")
+    assert captured["auth"] == "Bearer sk-key"
+
+
+async def test_async_delete_conversation_swallows_errors(hass: HomeAssistant) -> None:
+    """Deleting a conversation is best-effort and never raises."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(404, text="gone")
+
+    with patch(
+        "custom_components.aoai_conversation.client.get_async_client",
+        return_value=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+    ):
+        # Should not raise despite the 404.
+        await async_delete_conversation(
+            hass,
+            "https://res.services.ai.azure.com/api/projects/proj",
+            "sk-key",
+            "conv_abc123",
+        )
