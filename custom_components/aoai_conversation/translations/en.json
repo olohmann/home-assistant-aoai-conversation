@@ -17,7 +17,7 @@
         },
         "data_description": {
           "api_key": "Your Azure OpenAI (Azure AI Foundry) API key.",
-          "endpoint": "Your Azure OpenAI resource endpoint, e.g. `https://your-resource.services.ai.azure.com/`."
+          "endpoint": "Your Azure OpenAI resource endpoint (the base URL from the Azure portal 'Keys and Endpoint' page, ending in services.ai.azure.com)."
         },
         "description": "Reauthentication required. Please enter your updated API key and endpoint."
       },
@@ -28,7 +28,7 @@
         },
         "data_description": {
           "api_key": "Your Azure OpenAI (Azure AI Foundry) API key.",
-          "endpoint": "Your Azure OpenAI resource endpoint, e.g. `https://your-resource.services.ai.azure.com/`."
+          "endpoint": "Your Azure OpenAI resource endpoint (the base URL from the Azure portal 'Keys and Endpoint' page, ending in services.ai.azure.com)."
         },
         "description": "Set up the Azure OpenAI Conversation integration by providing your Azure OpenAI API key and resource endpoint. See the [Azure AI Foundry Responses API documentation]({instructions_url}) for details."
       }
@@ -149,7 +149,7 @@
           "data_description": {
             "prompt": "Instruct how the LLM should respond. This can be a template.",
             "chat_model": "The name of your Azure OpenAI chat model *deployment* (not the base model name), e.g. `gpt-4.1-mini` or your custom deployment name.",
-            "agent_endpoint": "The Foundry *project* endpoint that hosts the agent, e.g. `https://your-resource.services.ai.azure.com/api/projects/your-project`. Leave the model empty when using an agent.",
+            "agent_endpoint": "The Foundry *project* endpoint that hosts the agent (the project endpoint from the Foundry welcome screen, containing '/api/projects/'). Leave the model empty when using an agent.",
             "agent_name": "The name of the persistent Microsoft Foundry agent to call. Set this to route the conversation to a Foundry agent instead of a model.",
             "agent_version": "Optional agent version; leave blank to use the latest."
           }
@@ -202,7 +202,7 @@
             "stt_language": "Language"
           },
           "data_description": {
-            "stt_endpoint": "Your Azure AI Speech endpoint, e.g. `https://your-resource.cognitiveservices.azure.com/`.",
+            "stt_endpoint": "Your Azure AI Speech endpoint (the base URL from the Speech resource 'Keys and Endpoint' page).",
             "stt_api_key": "The API key for the Azure AI Speech resource.",
             "stt_language": "BCP-47 language used for recognition, e.g. `de-DE` or `en-US`."
           }
@@ -232,7 +232,7 @@
             "tts_style": "Speaking style"
           },
           "data_description": {
-            "tts_endpoint": "Your Azure AI Speech endpoint, e.g. `https://your-resource.cognitiveservices.azure.com/`.",
+            "tts_endpoint": "Your Azure AI Speech endpoint (the base URL from the Speech resource 'Keys and Endpoint' page).",
             "tts_api_key": "The API key for the Azure AI Speech resource.",
             "tts_voice": "Neural voice short name, e.g. `de-DE-KatjaNeural`. See the Azure voice list.",
             "tts_output_format": "Audio output format returned by Azure Speech.",

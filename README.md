@@ -158,7 +158,8 @@ uv run pytest
 
 > Some Home Assistant dependencies (`conversation`, `ai_task`, `tts`) require native
 > libraries to import in tests. On macOS: `brew install jpeg-turbo ffmpeg`. On
-> Debian/Ubuntu: `sudo apt-get install libturbojpeg0 ffmpeg` (the CI workflow does
+> Debian/Ubuntu: `sudo apt-get install ffmpeg` plus `libturbojpeg` (Ubuntu 24.04+)
+> or `libturbojpeg0` (older releases) — the CI workflow does
 > this automatically).
 
 ### Local smoketest (live)

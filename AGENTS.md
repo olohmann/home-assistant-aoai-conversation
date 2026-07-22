@@ -74,7 +74,8 @@ isolated** so upstream syncs stay easy. Latest HA only; **no backwards compatibi
 ## Testing
 
 - Importing HA `conversation`/`ai_task`/`tts` in tests requires **native deps**:
-  macOS `brew install jpeg-turbo ffmpeg`; Debian `apt-get install libturbojpeg0 ffmpeg`.
+  macOS `brew install jpeg-turbo ffmpeg`; Debian/Ubuntu `apt-get install ffmpeg`
+  plus `libturbojpeg` (Ubuntu 24.04+) or `libturbojpeg0` (older).
   Python deps (`PyTurboJPEG`, `ha-ffmpeg`, `hassil`, `home-assistant-intents`, `mutagen`)
   are already in the dev group.
 - Tests must set up the `homeassistant` core component (registers `exposed_entities`),

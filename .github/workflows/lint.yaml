@@ -22,9 +22,13 @@ jobs:
       - name: Install system dependencies
         # Native libraries required to import the Home Assistant integrations
         # this component depends on (camera/turbojpeg, ffmpeg for tts/stt).
+        # Ubuntu 24.04 (noble) ships the TurboJPEG runtime as `libturbojpeg`;
+        # older releases used `libturbojpeg0`.
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends libturbojpeg0 ffmpeg
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          sudo apt-get install -y --no-install-recommends libturbojpeg \
+            || sudo apt-get install -y --no-install-recommends libturbojpeg0
 
       - name: Sync dependencies
         run: uv sync --frozen
