@@ -41,7 +41,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.typing import VolDictType
 
-from .client import create_client
+from .client import create_client, supports_sampling
 from .const import (
     CONF_AGENT_ENDPOINT,
     CONF_AGENT_NAME,
@@ -428,18 +428,28 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 default=RECOMMENDED_MAX_TOKENS,
             ): int,
             probatio.Optional(
-                CONF_TOP_P,
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            probatio.Optional(
-                CONF_TEMPERATURE,
-                default=RECOMMENDED_TEMPERATURE,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-            probatio.Optional(
                 CONF_STORE_RESPONSES,
                 default=RECOMMENDED_STORE_RESPONSES,
             ): bool,
         }
+
+        # GPT-5 sampling remains configurable for reasoning effort "none".
+        if supports_sampling(options[CONF_CHAT_MODEL], "none"):
+            step_schema.update(
+                {
+                    probatio.Optional(
+                        CONF_TOP_P,
+                        default=RECOMMENDED_TOP_P,
+                    ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+                    probatio.Optional(
+                        CONF_TEMPERATURE,
+                        default=RECOMMENDED_TEMPERATURE,
+                    ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+                }
+            )
+        else:
+            options.pop(CONF_TOP_P, None)
+            options.pop(CONF_TEMPERATURE, None)
 
         if user_input is not None:
             options.update(user_input)

@@ -48,6 +48,14 @@ e.g. German `de‑DE‑KatjaNeural`) via the Speech REST API — no OpenAI audio
 > and **voice short name** (e.g. `de-DE-KatjaNeural`) directly, since the Speech
 > endpoint differs per install.
 
+Sampling options (`top_p` and `temperature`) are omitted for deployments named
+`gpt-6-luna` (including dated variants) and o-series models, even if older settings
+contain sampling values. They are hidden in advanced configuration for those
+deployments. Conventional models retain sampling options; GPT-5 deployments use
+them only when reasoning effort is `none`. Model-specific handling uses deployment
+name prefixes; it does not discover the underlying model of custom-named
+deployments. This fix does not assume that Luna supports GPT-5's reasoning or
+verbosity options.
 
 ## Installation
 

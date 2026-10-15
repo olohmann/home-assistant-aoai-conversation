@@ -259,3 +259,97 @@ async def test_conversation_subentry_agent_requires_endpoint(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"agent_endpoint": "agent_endpoint_required"}
+
+
+@pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_data"])
+@pytest.mark.parametrize(
+    ("model", "sampling"),
+    [
+        ("gpt-6-luna", False),
+        ("gpt-6-luna-2026-09-22", False),
+        ("o3", False),
+        ("o4-mini", False),
+        ("gpt-4.1-mini", True),
+        ("gpt-5.2", True),
+    ],
+)
+async def test_subentry_sampling_options(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    subentry_type: str,
+    model: str,
+    sampling: bool,
+) -> None:
+    """Only offer sampling options for deployments that can use them."""
+    result = await hass.config_entries.subentries.async_init(
+        (setup_integration.entry_id, subentry_type),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"name": "Azure Test", "chat_model": model, "recommended": False},
+    )
+
+    assert result["step_id"] == "additional"
+    fields = {key.schema for key in result["data_schema"].schema}
+    assert ("top_p" in fields) is sampling
+    assert ("temperature" in fields) is sampling
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "model"
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    if sampling:
+        assert result["data"]["top_p"] == 1.0
+        assert result["data"]["temperature"] == 1.0
+    else:
+        assert "top_p" not in result["data"]
+        assert "temperature" not in result["data"]
+
+
+@pytest.mark.parametrize("subentry_type", ["conversation", "ai_task_data"])
+@pytest.mark.parametrize("model", ["gpt-6-luna", "o3"])
+async def test_reconfigure_removes_unsupported_sampling(
+    hass: HomeAssistant,
+    setup_integration: MockConfigEntry,
+    subentry_type: str,
+    model: str,
+) -> None:
+    """Remove saved sampling options when switching to an incompatible model."""
+    subentry = next(
+        sub
+        for sub in setup_integration.subentries.values()
+        if sub.subentry_type == subentry_type
+    )
+    hass.config_entries.async_update_subentry(
+        setup_integration,
+        subentry,
+        data={
+            "chat_model": "gpt-4.1-mini",
+            "recommended": False,
+            "top_p": 0.4,
+            "temperature": 0.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (setup_integration.entry_id, subentry_type),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry.subentry_id,
+        },
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"chat_model": model, "recommended": False}
+    )
+    assert result["step_id"] == "additional"
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "model"
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.ABORT
+
+    saved_data = setup_integration.subentries[subentry.subentry_id].data
+    assert saved_data["chat_model"] == model
+    assert "top_p" not in saved_data
+    assert "temperature" not in saved_data

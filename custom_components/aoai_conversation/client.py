@@ -18,6 +18,13 @@ from homeassistant.helpers.httpx_client import get_async_client
 from .const import LOGGER
 
 
+def supports_sampling(model: str, reasoning_effort: str | None = None) -> bool:
+    """Return whether a model-named Azure deployment accepts sampling options."""
+    if model.startswith(("o", "gpt-6-luna")):
+        return False
+    return not model.startswith("gpt-5") or reasoning_effort == "none"
+
+
 def normalize_azure_endpoint(endpoint: str) -> str:
     """Return a base URL pointing at the Azure OpenAI v1 API surface.
 
